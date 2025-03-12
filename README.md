@@ -1,6 +1,6 @@
-# AI Search Agent
+# AI Agent (using langgraph)
 
-This project implements an AI search agent that helps with information retrieval and processing.
+This project implements an AI search agent that helps with information retrieval and processing, it also has some classes that make agents easier. It is a work in progress and the agents are continually being improved.
 
 ## Installation
 
@@ -56,7 +56,7 @@ Make sure to replace the placeholder values with your actual API keys and config
 Here's an example of how to import and the Agent class to do a chat:
 
 ```python
-from agent import Agent
+from agents import CommandLineAgent
 from dotenv import load_dotenv
 from langchain_openai import AzureChatOpenAI
 from tools import ask_for_instruction, report_progress
@@ -79,11 +79,11 @@ You are a helpful assistant that can provide information.
 """
 
 # Initialize the agent with the model, whatever tools, and the agent prompt 
-agent = Agent(model=model, tools=[
+agent = CommandLineAgent(model=model, tools=[
     ask_for_instruction,
     report_progress
 ], agent_prompt=agent_prompt)
-])
 
+# Run the agent
 agent.run()
 ```

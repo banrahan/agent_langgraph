@@ -1,18 +1,12 @@
 import os
 
 from dotenv import load_dotenv
-from langchain_core.messages import AnyMessage, ToolMessage
 from langchain_openai import AzureChatOpenAI
-from agent import Agent, CommandLineAgent
 
-from tools import (
-    ask_for_instruction,
-    create_document,
-    delete_document,
-    report_progress,
-    search,
-    update_document,
-)
+from agents import CommandLineAgent
+from tools import (ask_for_instruction, create_document, delete_document,
+                   report_progress, search, update_document)
+
 
 def main():
     """

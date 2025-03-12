@@ -4,11 +4,8 @@ import uuid
 
 from azure.core.credentials import AzureKeyCredential
 from azure.search.documents import SearchClient
-from azure.search.documents.indexes import SearchIndexClient
 from azure.search.documents.indexes.models import (
     SearchFieldDataType,
-    SearchIndex,
-    SimpleField,
 )
 from dotenv import load_dotenv
 from langchain_core.tools import tool
@@ -21,7 +18,7 @@ load_dotenv()
 @tool
 def ask_for_instruction() -> str:
     """
-    Ask the user for an instruction 
+    Ask the user for an instruction
     """
     return interrupt("User >> ")
 
@@ -33,7 +30,19 @@ def report_progress(str):
     Args:
         str: The progress message
     """
-    return (f"Agent >> {str}")
+    return f"Agent >> {str}"
+
+
+# Get Azure Search credentials from environment variables
+search_endpoint = os.getenv("AZURE_SEARCH_ENDPOINT")
+search_key = os.getenv("AZURE_SEARCH_KEY")
+index_name = os.getenv("AZURE_SEARCH_INDEX")
+
+# Initialize the search client
+credential = AzureKeyCredential(search_key)
+search_client = SearchClient(
+    endpoint=search_endpoint, index_name=index_name, credential=credential
+)
 
 
 @tool
@@ -47,30 +56,19 @@ def create_document(title: str, content: str) -> str:
         Result message indicating success or failure
     """
     try:
-        # Get Azure Search credentials from environment variables
-        search_endpoint = os.getenv("AZURE_SEARCH_ENDPOINT")
-        search_key = os.getenv("AZURE_SEARCH_KEY")
-        index_name = os.getenv("AZURE_SEARCH_INDEX")
-        
         # Generate a unique document ID
         doc_id = str(uuid.uuid4())
-        
+
         # Create document object
         document = {
             "id": doc_id,
             "title": title,
             "content": content,
         }
-        
-        # Initialize the search client
-        credential = AzureKeyCredential(search_key)
-        search_client = SearchClient(
-            endpoint=search_endpoint, index_name=index_name, credential=credential
-        )
-        
+
         # Upload the document to the index
         result = search_client.upload_documents(documents=[document])
-        
+
         # Check if upload was successful
         if len(result) > 0 and result[0].succeeded:
             return f"Document successfully added to index with ID: {doc_id}"
@@ -95,25 +93,6 @@ def search(query: str) -> str:
         Search results as a JSON object with fields 'id', 'title', and 'content'
     """
     try:
-        # Get Azure Search credentials from environment variables
-        search_endpoint = os.getenv("AZURE_SEARCH_ENDPOINT")
-        search_key = os.getenv("AZURE_SEARCH_KEY")
-        index_name = os.getenv("AZURE_SEARCH_INDEX")
-        
-        # Validate required credentials
-        if not all([search_endpoint, search_key, index_name]):
-            return json.dumps(
-                {
-                    "error": "Azure Search credentials not configured. Please set AZURE_SEARCH_ENDPOINT, AZURE_SEARCH_KEY, and AZURE_SEARCH_INDEX environment variables."
-                }
-            )
-            
-        # Initialize the search client
-        credential = AzureKeyCredential(search_key)
-        search_client = SearchClient(
-            endpoint=search_endpoint, index_name=index_name, credential=credential
-        )
-        
         # Execute search query
         results = search_client.search(
             search_text=query,
@@ -121,7 +100,7 @@ def search(query: str) -> str:
             search_fields=["content", "title"],  # Adjust based on your index schema
             select=["id", "content", "title"],  # Adjust based on your index schema
         )
-        
+
         # Format search results
         formatted_results = []
         for result in results:
@@ -131,7 +110,7 @@ def search(query: str) -> str:
                 "content": result.get("content", "No Content"),
             }
             formatted_results.append(formatted_result)
-            
+
         if formatted_results:
             return json.dumps(formatted_results)
         else:
@@ -151,23 +130,12 @@ def update_document(doc_id: str, updated_data: dict) -> str:
         Result message indicating success or failure
     """
     try:
-        # Get Azure Search credentials from environment variables
-        search_endpoint = os.getenv("AZURE_SEARCH_ENDPOINT")
-        search_key = os.getenv("AZURE_SEARCH_KEY")
-        index_name = os.getenv("AZURE_SEARCH_INDEX")
-        
-        # Initialize the search client
-        credential = AzureKeyCredential(search_key)
-        search_client = SearchClient(
-            endpoint=search_endpoint, index_name=index_name, credential=credential
-        )
-        
         # Add the document ID to the updated data
         updated_data["id"] = doc_id
-        
+
         # Update the document in the index
         result = search_client.merge_or_upload_documents(documents=[updated_data])
-        
+
         if len(result) > 0 and result[0].succeeded:
             return f"Document with ID {doc_id} successfully updated."
         else:
@@ -191,20 +159,9 @@ def delete_document(doc_id: str) -> str:
         Result message indicating success or failure
     """
     try:
-        # Get Azure Search credentials from environment variables
-        search_endpoint = os.getenv("AZURE_SEARCH_ENDPOINT")
-        search_key = os.getenv("AZURE_SEARCH_KEY")
-        index_name = os.getenv("AZURE_SEARCH_INDEX")
-        
-        # Initialize the search client
-        credential = AzureKeyCredential(search_key)
-        search_client = SearchClient(
-            endpoint=search_endpoint, index_name=index_name, credential=credential
-        )
-        
         # Delete the document from the index
         result = search_client.delete_documents(documents=[{"id": doc_id}])
-        
+
         if len(result) > 0 and result[0].succeeded:
             return f"Document with ID {doc_id} successfully deleted."
         else:
