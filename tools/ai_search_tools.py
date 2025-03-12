@@ -4,34 +4,13 @@ import uuid
 
 from azure.core.credentials import AzureKeyCredential
 from azure.search.documents import SearchClient
-from azure.search.documents.indexes.models import (
-    SearchFieldDataType,
-)
+from azure.search.documents.indexes.models import SearchFieldDataType
 from dotenv import load_dotenv
 from langchain_core.tools import tool
 from langgraph.types import interrupt
 
 # Load environment variables from .env file
 load_dotenv()
-
-
-@tool
-def ask_for_instruction() -> str:
-    """
-    Ask the user for an instruction
-    """
-    return interrupt("User >> ")
-
-
-@tool
-def report_progress(str):
-    """
-    Report progress to the user
-    Args:
-        str: The progress message
-    """
-    return f"Agent >> {str}"
-
 
 # Get Azure Search credentials from environment variables
 search_endpoint = os.getenv("AZURE_SEARCH_ENDPOINT")
