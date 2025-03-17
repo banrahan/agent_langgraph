@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 from langchain_openai import AzureChatOpenAI
 
 from agents import CommandLineAgent
-from tools import ask_for_instruction, report_progress
+from tools import (ask_for_instruction, report_progress)
 from tools.ai_search_tools import (
     search,
     delete_document,
@@ -54,17 +54,14 @@ Take as much time as you need and ask for help if you need it. Always communicat
     """
 
     # Initialize the agent
-    agent = CommandLineAgent(
-        model=model,
-        tools=[
+    agent = CommandLineAgent(model=model, tools=[ 
             ask_for_instruction,
             report_progress,
             search,
             delete_document,
             create_document,
             update_document,
-        ],
-        agent_prompt=agent_prompt,
+        ], agent_prompt=agent_prompt,
     )
 
     # Run the agent
