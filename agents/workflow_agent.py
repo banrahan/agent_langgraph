@@ -27,12 +27,19 @@ class WorkflowAgent(Agent):
         for event in self.graph.stream(
             self.state, config=self.thread_config, stream_mode="values"
         ):
-            print(event)
+            # print(event)
+            
             try:
+                content = event["messages"][-1].content
+                # this means it is probably html
+                if content.startswith("<"):
+                    return content
+
                 content = json.loads(event["messages"][-1].content)
 
                 if content != "" and content != "content":
                     return content
+
             except Exception as e:
                 pass
 

@@ -13,7 +13,6 @@ from azure.search.documents.indexes.models import (
 )
 from dotenv import load_dotenv
 from langchain_core.tools import tool
-from langgraph.types import interrupt
 
 # Load environment variables from .env file
 load_dotenv()
