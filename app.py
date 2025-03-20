@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, request, jsonify
 import os
 from dotenv import load_dotenv
 from langchain_openai import AzureChatOpenAI
@@ -9,6 +9,10 @@ from tools.ai_search_tools import (
     delete_document,
     update_document,
     create_document,
+)
+from agents.html_renderers import (
+    render_search_page,
+    render_create_page,
 )
 
 # Create Flask app
@@ -136,26 +140,15 @@ STEP 1: IDENTIFY THE USER INTENT
 use the path to identify the user intent. The current URL path is: ```{path}```
 
 First check if this is a standard operation:
-- If path equals "search" or contains words like "find", "get", "query": This is a SEARCH operation and should return a search page. Make sure you render all of the fields. Each row should have a button to delete the document, and a button to update the document. The update button should take the user to a new page with a form to update the document.
-- If path equals "delete" or contains words like "remove", "delete", "trash": This is a DELETE operation and should return a delete page
-- If path equals "create" or contains words like "add", "new", "create": This is a CREATE operation and should return a create form
-- If path equals "update" or contains words like "change", "modify", "update": This is an UPDATE operation and should return an update form
-
-STEP 2: USE THE CORRECT API ENDPOINT
-For all of the different operations on the page, use the correct API endpoint, use post for everthing, and put the parameters in a json object, for the operation at 127.0.0.1/api/<path>
-- If the button is for a search operation, use the something like 127.0.0.1:5000/api/search endpoint
-- If the button is for a delete operation, use the something like 127.0.0.1:5000/api/delete endpoint
-- If the button is for a create operation, use the something like 127.0.0.1:5000/api/create endpoint
-- If the button is for a update operation, use the something like 127.0.0.1:5000/api/update endpoint
-
-IMPORTANT:
-- Create a helper function in javascript that will take the json object and convert it to a html table. Include this function in the html page and call it whenever you are rendering the results of a request. 
-
+- If path equals "search" or contains words like "find", "get", "query": user **render_search_page** tool to render a search page
+- If path equals "create" or contains words like "add", "new", "create": user **render_create_page** tool to render a create page
 """
     # Initialize the workflow agent with a higher recursion limit
     api_agent = WorkflowAgent(
         model=model,
         tools=[
+            render_search_page,
+            render_create_page,
         ],
         agent_prompt=ui_agent_prompt,
     )
@@ -163,8 +156,13 @@ IMPORTANT:
     # Pass path directly rather than as action to make it clearer
     result = api_agent.run_workflow({})
 
-    return result
+    return result["page"]
 
 if __name__ == "__main__":
     # Run the Flask app in debug mode
     app.run(debug=True)
+
+
+
+# - If path equals "delete" or contains words like "remove", "delete", "trash": This is a DELETE operation and should return a delete page
+# - If path equals "update" or contains words like "change", "modify", "update": This is an UPDATE operation and should return an update form

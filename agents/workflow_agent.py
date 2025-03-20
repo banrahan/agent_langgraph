@@ -1,8 +1,7 @@
-from langchain.schema import AIMessage, HumanMessage, SystemMessage
-from langchain_core.runnables import Runnable
-from typing import List, Dict, Any, Optional
-from .agent import Agent
 import json
+
+from .agent import Agent
+
 
 class WorkflowAgent(Agent):
     """
@@ -19,7 +18,7 @@ class WorkflowAgent(Agent):
 
     def run_workflow(self, data):
         """
-        Run the workflow agent.
+        Run the workflow agent, tries to return a dictionary from JSON.
         """
         # Add the data to the messages
         self.state['messages'].extend({"role": "user", "content": json.dumps(data)})
@@ -27,13 +26,10 @@ class WorkflowAgent(Agent):
         for event in self.graph.stream(
             self.state, config=self.thread_config, stream_mode="values"
         ):
-            # print(event)
+            print(event)
             
             try:
                 content = event["messages"][-1].content
-                # this means it is probably html
-                if content.startswith("<"):
-                    return content
 
                 content = json.loads(event["messages"][-1].content)
 
