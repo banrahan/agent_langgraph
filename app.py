@@ -10,9 +10,14 @@ from tools.ai_search_tools import (
     update_document,
     create_document,
 )
-from agents.html_renderers import (
-    render_search_page,
-    render_create_page,
+from tools.html_tools import (
+    html_template,
+    javascript_list_to_html,
+    button,
+    search_bar,
+)
+from agents.html_agent import (
+    HTMLAgent,
 )
 
 # Create Flask app
@@ -100,63 +105,57 @@ IMPORTANT: Feel free to use the tools in any order you see fit, but ensure that 
 
     return jsonify(result)
 
-# @app.route("/api/search", methods=["POST"])
-# def api_search():
-#     """API endpoint for search operations"""
-#     data = request.json
 
-#     search_agent_prompt = """
-# You are an expert database administrator and data engineer specializing in Azure AI Search.
-# Your goal is to search a database with the tool **search** and return the results in a JSON object. Do not add anything else to the JSON object.
 
-# Instructions:
-# 1. Use the **search** tool to find documents matching the user's query, found in the user's json input as **query**.
-# 2. Return the results in a JSON object.
-# """
-
-#     # Initialize the workflow agent
-#     search_agent = WorkflowAgent(
-#         model=model,
-#         tools=[
-#             # NOTE: If I want to change the service that I am using, I can just change the tool here..not much code change, just this and the prompt
-#             search,
-#         ],
-#         agent_prompt=search_agent_prompt,
-#     )
-
-#     result = search_agent.run_workflow({"query": data.get("query", "")})
-
-#     # Return the result as JSON
-#     return jsonify(result)
 
 @app.route("/ui/<path:path>", methods=["GET"])
 def user_interface(path):
     """User interface for the application"""
 
     ui_agent_prompt = f"""
-You are a web server that returns web pages based on the URL path and the tools available. The application is front end to a REST API that allows users to search, create, update, and delete documents in a database. Use bootstrap for styling, html, and vanilla javascript as much as possible. What you return should be a complete html page that can be rendered in a browser. Do not add any additional text or explanation.
+You are an amazing web developer that loves to use bootstrap. Your job is to create a front end for a create page. The create page is for a database of document.  Use bootstrap for styling, html, and vanilla javascript as much as possible. What you return should be a complete html page that can be rendered in a browser. Do not add any additional text or explanation.
 
-STEP 1: IDENTIFY THE USER INTENT
-use the path to identify the user intent. The current URL path is: ```{path}```
+STEP 1: IDENTIFY THE OPERATION TYPE
+Use the path to identify the user intent. The current URL path is: ```{path}```
 
 First check if this is a standard operation:
-- If path equals "search" or contains words like "find", "get", "query": user **render_search_page** tool to render a search page
-- If path equals "create" or contains words like "add", "new", "create": user **render_create_page** tool to render a create page
+- If path equals "search" or contains words like "find", "get", "query": This is a SEARCH operation and you should create a SEARCH PAGE
+
+SEARCH PAGE:
+For a search page, create a search bar that allows the user to enter their search query. The search bar should be styled using bootstrap and should have a submit button. The search bar should be able to handle the search query and return the results.
+
+
+TOOLS:
+- **html_template**: This tool allows you to create a complete HTML template for the user interface. Use this tool to create a complete HTML template for the search page.
+- **button**: This tool allows you to create a button for the user interface. Use this tool to create a button that can be used to submit the search query.
+- **search_bar**: This tool allows you to create a search bar for the user interface. Use this tool to create a search bar for the user to enter their search query.
+- **javascript_list_to_html**: This tool creates a javascript function that you can called in the user interface. The generated function should be able to take a list of items and create a html list. Use this tool to create a javascript function that can take the search results and display them in a list format.
+BUTTON DETAILS:
+For all of the different operations on the page, attach the correct API endpoint via javascript. Use post for everthing, and put the parameters in a json object.
+- If the button is for a search operation, use the something like 127.0.0.1:5000/api/search endpoint
+- If the button is for a delete operation, use the something like 127.0.0.1:5000/api/delete endpoint
+- If the button is for a create operation, use the something like 127.0.0.1:5000/api/create endpoint
+- If the button is for a update operation, use the something like 127.0.0.1:5000/api/update endpoint
+
+
+IMPORTANT: Feel free to use the tools in any order you see fit, but ensure that you only execute one tool at a time. If multiple tools are needed, run them sequentially and return the final result. Feel free to generate any additional HTML, CSS, or JavaScript code needed to create a complete web page.
 """
     # Initialize the workflow agent with a higher recursion limit
-    api_agent = WorkflowAgent(
+    api_agent = HTMLAgent(
         model=model,
         tools=[
-            render_search_page,
-            render_create_page,
+            html_template,
+            button,
+            search_bar,
+            javascript_list_to_html,
         ],
         agent_prompt=ui_agent_prompt,
     )
 
     # Pass path directly rather than as action to make it clearer
-    result = api_agent.run_workflow({})
+    result = api_agent.render_html({})
 
-    return result["page"]
+    return result
 
 if __name__ == "__main__":
     # Run the Flask app in debug mode

@@ -24,12 +24,12 @@ class HTMLAgent(Agent):
             messages,
         )
 
-    def is_html_string(self, input_string):
+    def is_html_page(self, input_string):
         """
-        Check if the input string is a valid HTML string.
+        Check if the input string is a valid HTML page.
         """
         soup = BeautifulSoup(input_string, "html.parser")
-        return bool(soup.find())  # Returns True if the string contains HTML tags
+        return bool(soup.find("html") and soup.find("body"))  # Returns True if the string contains <html> and <body> tags
 
     def render_html(self, data):
         """
@@ -44,7 +44,7 @@ class HTMLAgent(Agent):
             try:
                 content = event["messages"][-1].content
 
-                if self.is_html_string(content):
+                if self.is_html_page(content):
                     return content
 
             except Exception as e:
